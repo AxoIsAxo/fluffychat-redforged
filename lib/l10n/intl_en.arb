@@ -2782,5 +2782,30 @@
         "description": "This should be a very short string because there is not much space in the button!"
     },
     "createNewChat": "Create new chat",
-    "reset": "Reset"
+    "reset": "Reset",
+    "bio": "Bio",
+    "@bio": {
+        "description": "Label for user bio field"
+    },
+    "bioHint": "Tell people a little about yourself...",
+    "@bioHint": {
+        "description": "Placeholder text for bio input field"
+    },
+    "bioOf": "About {displayname}",
+    "@bioOf": {
+        "description": "Heading for another user's bio",
+        "placeholders": {
+            "displayname": {
+                "type": "String"
+            }
+        }
+    },
+    "bioHasBeenChanged": "Bio has been changed",
+    "@bioHasBeenChanged": {
+        "description": "Confirmation message when bio is updated"
+    },
+    "editBio": "Edit bio",
+    "@editBio": {
+        "description": "Title for editing bio"
+    }
 }

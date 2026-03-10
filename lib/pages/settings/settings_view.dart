@@ -118,6 +118,26 @@ class SettingsView extends StatelessWidget {
                 );
               },
             ),
+            // Bio section
+            if (controller.isBioLoading)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              ListTile(
+                leading: const Icon(Icons.info_outlined),
+                title: Text(L10n.of(context).bio),
+                subtitle: Text(
+                  controller.bioController.text.isEmpty
+                      ? L10n.of(context).bioHint
+                      : controller.bioController.text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.edit_outlined),
+                onTap: controller.setBioAction,
+              ),
             FutureBuilder(
               future: Matrix.of(context).client.getAuthMetadata(),
               builder: (context, snapshot) {

@@ -29,6 +29,8 @@ class Settings extends StatefulWidget {
 class SettingsController extends State<Settings> {
   Future<Profile>? profileFuture;
   bool profileUpdated = false;
+  final bioController = TextEditingController();
+  bool isBioLoading = false;
 
   void updateProfile() => setState(() {
     profileUpdated = true;
@@ -155,7 +157,10 @@ class SettingsController extends State<Settings> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkBootstrap());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkBootstrap();
+      loadBio();
+    });
 
     super.initState();
   }
@@ -189,6 +194,63 @@ class SettingsController extends State<Settings> {
     }
     await context.push('/backup');
     checkBootstrap();
+  }
+
+  Future<void> loadBio() async {
+    if (isBioLoading) return;
+    setState(() => isBioLoading = true);
+    try {
+      final matrix = Matrix.of(context);
+      final response = await matrix.client.request(
+        RequestType.GET,
+        '/client/v3/profile/${matrix.client.userID}/im.fluffychat.bio',
+      );
+      if (mounted) {
+        bioController.text = response['im.fluffychat.bio'] as String? ?? '';
+      }
+    } catch (_) {
+      // Bio not set yet - that's fine, leave blank
+    } finally {
+      if (mounted) {
+        setState(() => isBioLoading = false);
+      }
+    }
+  }
+
+  Future<void> setBioAction() async {
+    final input = await showTextInputDialog(
+      useRootNavigator: false,
+      context: context,
+      title: L10n.of(context).editBio,
+      okLabel: L10n.of(context).ok,
+      cancelLabel: L10n.of(context).cancel,
+      initialText: bioController.text,
+    );
+    if (input == null) return;
+    
+    final matrix = Matrix.of(context);
+    final success = await showFutureLoadingDialog(
+      context: context,
+      future: () => matrix.client.request(
+        RequestType.PUT,
+        '/client/v3/profile/${matrix.client.userID}/im.fluffychat.bio',
+        data: {'im.fluffychat.bio': input.trim()},
+      ),
+    );
+    if (success.error == null) {
+      bioController.text = input.trim();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(L10n.of(context).bioHasBeenChanged)),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    bioController.dispose();
+    super.dispose();
   }
 
   @override

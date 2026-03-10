@@ -38,6 +38,19 @@ class UserDialog extends StatelessWidget {
 
   const UserDialog(this.profile, {this.noProfileWarning = false, super.key});
 
+  Future<String?> _fetchBio(BuildContext context, String userId) async {
+    try {
+      final client = Matrix.of(context).client;
+      final response = await client.request(
+        RequestType.GET,
+        '/client/v3/profile/$userId/im.fluffychat.bio',
+      );
+      return response['im.fluffychat.bio'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final client = Matrix.of(context).client;
@@ -188,6 +201,39 @@ class UserDialog extends StatelessWidget {
                     ),
                   ),
                 ),
+              // Bio section for other users
+              Builder(
+                builder: (innerContext) {
+                  return FutureBuilder<String?>(
+                    future: _fetchBio(innerContext, profile.userId),
+                    builder: (futureContext, snapshot) {
+                      final bio = snapshot.data;
+                      if (snapshot.hasData && bio != null && bio.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                L10n.of(futureContext).bioOf(displayname),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                bio,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  );
+                },
+              ),
               Row(
                 mainAxisAlignment: .spaceBetween,
                 spacing: 4,
