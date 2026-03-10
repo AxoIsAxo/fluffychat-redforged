@@ -4,11 +4,15 @@ import 'package:matrix/matrix.dart';
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/stream_extension.dart';
+import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:fluffychat/widgets/mxc_image.dart';
 import '../../widgets/adaptive_dialogs/user_dialog.dart';
+import '../../widgets/mxc_image_viewer.dart';
 
 class StatusMessageList extends StatelessWidget {
   final void Function() onStatusEdit;
@@ -19,10 +23,12 @@ class StatusMessageList extends StatelessWidget {
 
   void _onStatusTab(BuildContext context, Profile profile) {
     final client = Matrix.of(context).client;
-    if (profile.userId == client.userID) return onStatusEdit();
+    if (profile.userId == client.userID) {
+      onStatusEdit();
+      return;
+    }
 
     UserDialog.show(context: context, profile: profile);
-    return;
   }
 
   @override
@@ -54,9 +60,8 @@ class StatusMessageList extends StatelessWidget {
                   ?.where(isInterestingPresence)
                   .toList();
 
-              // If no other presences than the own entry is interesting, we
-              // hide the presence header.
-              if (presences == null || presences.length <= 1) {
+              // If no presences are interesting, we hide the presence header.
+              if (presences == null || presences.isEmpty) {
                 return const SizedBox.shrink();
               }
 
@@ -82,7 +87,7 @@ class StatusMessageList extends StatelessWidget {
                   itemBuilder: (context, i) => PresenceAvatar(
                     presence: presences[i],
                     height: StatusMessageList.height,
-                    onTap: (profile) => _onStatusTab(context, profile),
+                    onStatusEdit: onStatusEdit,
                   ),
                 ),
               );
@@ -97,34 +102,60 @@ class StatusMessageList extends StatelessWidget {
 class PresenceAvatar extends StatelessWidget {
   final CachedPresence presence;
   final double height;
-  final void Function(Profile) onTap;
+  final void Function() onStatusEdit;
 
   const PresenceAvatar({
     required this.presence,
     required this.height,
-    required this.onTap,
+    required this.onStatusEdit,
     super.key,
   });
+
+  Future<(Profile, String?)> _fetchData(BuildContext context) async {
+    final client = Matrix.of(context).client;
+    final profile = await client.getProfileFromUserId(presence.userid);
+    String? statusImage;
+    try {
+      final response = await client.request(
+        RequestType.GET,
+        '/client/v3/profile/${presence.userid}/im.fluffychat.status_image',
+      );
+      statusImage = response['im.fluffychat.status_image'] as String?;
+    } catch (_) {}
+    return (profile, statusImage);
+  }
 
   @override
   Widget build(BuildContext context) {
     final avatarSize = height - 16 - 16 - 6;
     final client = Matrix.of(context).client;
-    return FutureBuilder<Profile>(
-      future: client.getProfileFromUserId(presence.userid),
+
+    return FutureBuilder<(Profile, String?)>(
+      future: _fetchData(context),
       builder: (context, snapshot) {
         final theme = Theme.of(context);
+        final profile = snapshot.data?.$1;
+        final statusImage = snapshot.data?.$2;
 
-        final profile = snapshot.data;
         final displayName =
             profile?.displayName ??
             presence.userid.localpart ??
             presence.userid;
         final statusMsg = presence.statusMsg;
+        final hasStatus = (statusMsg?.isNotEmpty ?? false) || (statusImage?.isNotEmpty ?? false);
 
         const statusMsgBubbleElevation = 6.0;
         final statusMsgBubbleShadowColor = theme.colorScheme.surfaceBright;
         final statusMsgBubbleColor = Colors.white.withAlpha(212);
+
+        final ringGradient = hasStatus
+            ? const LinearGradient(
+                colors: [Colors.greenAccent, Colors.green, Colors.tealAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : presence.gradient;
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: SizedBox(
@@ -139,7 +170,61 @@ class PresenceAvatar extends StatelessWidget {
                       curve: FluffyThemes.animationCurve,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(avatarSize),
-                        onTap: profile == null ? null : () => onTap(profile),
+                        onTap: profile == null
+                            ? null
+                            : () async {
+                                if (presence.userid == client.userID) {
+                                  onStatusEdit();
+                                  return;
+                                }
+
+                                if (!hasStatus) {
+                                  UserDialog.show(
+                                    context: context,
+                                    profile: profile,
+                                  );
+                                  return;
+                                }
+
+                                final choice = await showModalActionPopup<String>(
+                                  context: context,
+                                  title: displayName,
+                                  cancelLabel: L10n.of(context).cancel,
+                                  actions: [
+                                    AdaptiveModalAction(
+                                      value: 'picture',
+                                      label: L10n.of(context).viewProfilePicture,
+                                      icon: const Icon(Icons.account_circle_outlined),
+                                    ),
+                                    AdaptiveModalAction(
+                                      value: 'status',
+                                      label: L10n.of(context).viewStatus,
+                                      icon: const Icon(Icons.info_outlined),
+                                    ),
+                                  ],
+                                );
+
+                                if (choice == 'picture') {
+                                  if (profile.avatarUrl != null) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => MxcImageViewer(profile.avatarUrl!),
+                                    );
+                                  }
+                                } else if (choice == 'status') {
+                                  if (statusImage != null && statusImage.isNotEmpty) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => MxcImageViewer(Uri.parse(statusImage)),
+                                    );
+                                  } else {
+                                    UserDialog.show(
+                                      context: context,
+                                      profile: profile,
+                                    );
+                                  }
+                                }
+                              },
                         child: Material(
                           borderRadius: BorderRadius.circular(avatarSize),
                           child: Stack(
@@ -147,7 +232,7 @@ class PresenceAvatar extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
-                                  gradient: presence.gradient,
+                                  gradient: ringGradient,
                                   borderRadius: BorderRadius.circular(
                                     avatarSize,
                                   ),
@@ -179,10 +264,7 @@ class PresenceAvatar extends StatelessWidget {
                                     height: 24,
                                     child: FloatingActionButton.small(
                                       heroTag: null,
-                                      onPressed: () => onTap(
-                                        profile ??
-                                            Profile(userId: presence.userid),
-                                      ),
+                                      onPressed: onStatusEdit,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -193,14 +275,34 @@ class PresenceAvatar extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              if (statusMsg != null) ...[
+                              if (statusImage != null && statusImage.isNotEmpty)
+                                Positioned(
+                                  right: 4,
+                                  top: 4,
+                                  child: Material(
+                                    elevation: statusMsgBubbleElevation,
+                                    shadowColor: statusMsgBubbleShadowColor,
+                                    borderRadius: BorderRadius.circular(
+                                      AppConfig.borderRadius / 2,
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    color: statusMsgBubbleColor,
+                                    child: MxcImage(
+                                      uri: Uri.tryParse(statusImage),
+                                      width: avatarSize / 2.5,
+                                      height: avatarSize / 2.5,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                )
+                              else if (statusMsg != null && statusMsg.isNotEmpty)
                                 Positioned(
                                   left: 0,
                                   top: 0,
                                   right: 0,
                                   child: Column(
                                     spacing: 2,
-                                    crossAxisAlignment: .start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: .min,
                                     children: [
                                       Material(
@@ -226,44 +328,9 @@ class PresenceAvatar extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 8.0,
-                                        ),
-                                        child: Material(
-                                          color: statusMsgBubbleColor,
-                                          elevation: statusMsgBubbleElevation,
-                                          shadowColor:
-                                              statusMsgBubbleShadowColor,
-                                          borderRadius: BorderRadius.circular(
-                                            AppConfig.borderRadius,
-                                          ),
-                                          child: const SizedBox.square(
-                                            dimension: 8,
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 13.0,
-                                        ),
-                                        child: Material(
-                                          color: statusMsgBubbleColor,
-                                          elevation: statusMsgBubbleElevation,
-                                          shadowColor:
-                                              statusMsgBubbleShadowColor,
-                                          borderRadius: BorderRadius.circular(
-                                            AppConfig.borderRadius,
-                                          ),
-                                          child: const SizedBox.square(
-                                            dimension: 5,
-                                          ),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ),
-                              ],
                             ],
                           ),
                         ),

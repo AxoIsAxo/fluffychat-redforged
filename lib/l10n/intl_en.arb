@@ -2807,5 +2807,10 @@
     "editBio": "Edit bio",
     "@editBio": {
         "description": "Title for editing bio"
-    }
+    },
+    "statusImage": "Status image",
+    "setStatusImage": "Set status image",
+    "removeStatusImage": "Remove status image",
+    "viewProfilePicture": "View profile picture",
+    "viewStatus": "View status"
 }
