@@ -29,6 +29,16 @@ FluffyChat RedForged is an open source Matrix client written in Flutter. This fo
 
 ... and much more.
 
+## 🚀 RedForged Exclusive Features
+
+This fork adds several enhancements not available in the original FluffyChat:
+
+- 🔐 **OIDC Authentication** - Support for OpenID Connect authentication with Matrix servers
+- 🔑 **Secure Recovery Key Storage** - Store recovery keys securely on device with automatic SSSS unlock on startup
+- 👤 **User Biographies** - View and edit user profile biographies for richer social profiles
+
+These features enhance security, convenience, and social interaction within the Matrix ecosystem.
+
 ## Installation
 
 This is a customized fork. For installation instructions and downloads, please visit:
@@ -104,10 +114,12 @@ This is a fork of the original FluffyChat project with customizations for the Re
 
 ### Changes in this Fork
 
-- Custom branding and configuration for RedForged
-- Secure recovery key storage with auto-unlock functionality
-- Various bug fixes and improvements
-- Updated to version 0.1.0 for this fork
+- **OIDC Authentication Support** - Full OpenID Connect integration for modern authentication
+- **Secure Recovery Key Storage** - Device-local secure storage with automatic SSSS unlock
+- **User Biographies** - Enhanced profile system with user biographies
+- **Custom Branding** - RedForged-specific theming and configuration
+- **Bug Fixes & Improvements** - Various stability and usability enhancements
+- **Version 0.1.0** - Initial stable release of the RedForged fork
 
 ## License
 
