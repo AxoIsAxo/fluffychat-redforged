@@ -51,7 +51,7 @@ android {
     signingConfigs {
        create("release") {
             keyAlias = "dummyAlias"
-            keyPassword = "dummyPassword"
+            keyPassword = "dummyStorePassword"
             storeFile = file("dummy.keystore")
             storePassword = "dummyStorePassword"
         }
@@ -78,6 +78,7 @@ android {
         ndk { // Workaround for https://github.com/flutter/flutter/issues/162153#issuecomment-2612443642
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64", "x86")
         }
+        manifestPlaceholders["appAuthRedirectScheme"] = "im.fluffychat.redforged"
     }
 
     buildTypes {
