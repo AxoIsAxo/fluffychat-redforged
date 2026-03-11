@@ -8,23 +8,28 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
+import 'package:fluffychat/services/oidc_service.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 
 class SessionBackup {
   final String? olmAccount;
   final String accessToken;
+  final String? refreshToken;
   final String userId;
   final String homeserver;
   final String? deviceId;
   final String? deviceName;
+  final bool isOidc;
 
   const SessionBackup({
     required this.olmAccount,
     required this.accessToken,
+    this.refreshToken,
     required this.userId,
     required this.homeserver,
     required this.deviceId,
     this.deviceName,
+    this.isOidc = false,
   });
 
   factory SessionBackup.fromJsonString(String json) =>
@@ -33,19 +38,23 @@ class SessionBackup {
   factory SessionBackup.fromJson(Map<String, dynamic> json) => SessionBackup(
     olmAccount: json['olm_account'],
     accessToken: json['access_token'],
+    refreshToken: json['refresh_token'],
     userId: json['user_id'],
     homeserver: json['homeserver'],
     deviceId: json['device_id'],
     deviceName: json['device_name'],
+    isOidc: json['is_oidc'] ?? false,
   );
 
   Map<String, dynamic> toJson() => {
     'olm_account': olmAccount,
     'access_token': accessToken,
+    'refresh_token': refreshToken,
     'user_id': userId,
     'homeserver': homeserver,
     'device_id': deviceId,
     if (deviceName != null) 'device_name': deviceName,
+    'is_oidc': isOidc,
   };
 
   @override
@@ -89,16 +98,21 @@ extension InitWithRestoreExtension on Client {
             userId != null;
         assert(hasBackup);
         if (hasBackup) {
+          final tokens = await OidcService.loadTokens();
+          final isOidc = tokens['access_token'] == accessToken;
+
           Logs().v('Store session in backup');
           storage?.write(
             key: storageKey,
             value: SessionBackup(
               olmAccount: encryption?.pickledOlmAccount,
               accessToken: accessToken,
+              refreshToken: isOidc ? tokens['refresh_token'] : null,
               deviceId: deviceId,
               homeserver: homeserver,
               deviceName: deviceName,
               userId: userId,
+              isOidc: isOidc,
             ).toString(),
           );
         }
@@ -119,6 +133,7 @@ extension InitWithRestoreExtension on Client {
         final sessionBackup = SessionBackup.fromJsonString(sessionBackupString);
         await init(
           newToken: sessionBackup.accessToken,
+          newRefreshToken: sessionBackup.refreshToken,
           newOlmAccount: sessionBackup.olmAccount,
           newDeviceID: sessionBackup.deviceId,
           newDeviceName: sessionBackup.deviceName,

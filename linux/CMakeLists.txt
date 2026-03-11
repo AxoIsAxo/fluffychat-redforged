@@ -6,7 +6,7 @@ project(runner LANGUAGES CXX)
 set(OPENSSL_USE_STATIC_LIBS OFF)
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "fluffychat")
+set(BINARY_NAME "fluffychat-redforged")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "chat.fluffy.fluffychat")

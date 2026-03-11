@@ -30,10 +30,25 @@ Future<void> connectToHomeserverFlow(
     }
     final l10n = L10n.of(context);
     final client = await Matrix.of(context).getLoginClient();
-    final (_, _, loginFlows, authMetadata) = await client.checkHomeserver(
-      homeserver,
-      fetchAuthMetadata: true,
-    );
+    List<LoginFlow> loginFlows = [];
+    GetAuthMetadataResponse? authMetadata;
+    try {
+      final result = await client.checkHomeserver(
+        homeserver,
+        fetchAuthMetadata: true,
+      );
+      loginFlows = result.$3;
+      authMetadata = result.$4;
+    } on MatrixException catch (e) {
+      if (e.errcode == 'M_UNRECOGNIZED') {
+        Logs().i('OIDC-only server detected, fetching auth metadata directly');
+        // checkHomeserver resets homeserver to null on throw; restore it
+        client.homeserver = homeserver;
+        authMetadata = await client.getAuthMetadata();
+      } else {
+        rethrow;
+      }
+    }
 
     final regLink = homeserverData.regLink;
     final supportsSso = loginFlows.any((flow) => flow.type == 'm.login.sso');

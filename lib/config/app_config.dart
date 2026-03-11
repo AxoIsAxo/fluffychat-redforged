@@ -13,10 +13,10 @@ abstract class AppConfig {
   static const bool hideTypingUsernames = false;
 
   static const String inviteLinkPrefix = 'https://matrix.to/#/';
-  static const String deepLinkPrefix = 'im.fluffychat://chat/';
+  static const String deepLinkPrefix = 'im.fluffychat.redforged://chat/';
   static const String schemePrefix = 'matrix:';
-  static const String pushNotificationsChannelId = 'fluffychat_push';
-  static const String pushNotificationsAppId = 'chat.fluffy.fluffychat';
+  static const String pushNotificationsChannelId = 'fluffychat_redforged_push';
+  static const String pushNotificationsAppId = 'im.fluffychat.redforged';
   static const double borderRadius = 16.0;
   static const double spaceBorderRadius = 11.0;
   static const double columnWidth = 360.0;
@@ -29,8 +29,8 @@ abstract class AppConfig {
       'https://fluffychat.im/faq/#how_do_i_find_other_users';
   static const String howDoIGetStickersTutorial =
       'https://fluffychat.im/faq/#how_do_i_get_stickers';
-  static const String appId = 'im.fluffychat.FluffyChat';
-  static const String appOpenUrlScheme = 'im.fluffychat';
+  static const String appId = 'im.fluffychat.redforged';
+  static const String appOpenUrlScheme = 'im.fluffychat.redforged';
 
   static const String sourceCodeUrl =
       'https://github.com/krille-chan/fluffychat';

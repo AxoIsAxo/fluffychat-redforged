@@ -71,12 +71,20 @@
                <data android:scheme="matrix" />
             </intent-filter>
 
-            <!-- App can open im.fluffychat:// uris -->
+            <!-- App can open im.fluffychat.redforged:// uris -->
             <intent-filter>
                <action android:name="android.intent.action.VIEW" />
                <category android:name="android.intent.category.DEFAULT" />
                <category android:name="android.intent.category.BROWSABLE" />
-               <data android:scheme="im.fluffychat" android:host="chat" />
+               <data android:scheme="im.fluffychat.redforged" android:host="chat" />
+            </intent-filter>
+
+            <!-- App can open im.fluffychat.redforged:// urls for login callback -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="im.fluffychat.redforged" android:host="login" android:pathPrefix="/callback" />
             </intent-filter>
 
             <!-- App can receive shared text -->
@@ -106,7 +114,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="im.fluffychat" android:host="login"/>
+                <data android:scheme="im.fluffychat.redforged" android:host="login"/>
             </intent-filter>
         </activity>
 

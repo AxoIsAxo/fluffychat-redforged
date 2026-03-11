@@ -157,10 +157,7 @@ class SettingsController extends State<Settings> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkBootstrap();
-      loadBio();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkBootstrap());
 
     super.initState();
   }

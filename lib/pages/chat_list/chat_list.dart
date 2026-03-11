@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:cross_file/cross_file.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_shortcuts_new/flutter_shortcuts_new.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:matrix/matrix.dart' as sdk;
 import 'package:matrix/matrix.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -16,8 +14,6 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
-import 'package:fluffychat/pages/settings/settings.dart';
-import 'package:fluffychat/utils/file_selector.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -669,130 +665,31 @@ class ChatListController extends State<ChatList>
   }
 
   Future<void> setStatus() async {
-    final matrix = Matrix.of(context);
-    final client = matrix.client;
-
-    final action = await showModalActionPopup<String>(
+    final client = Matrix.of(context).client;
+    final currentPresence = await client.fetchCurrentPresence(client.userID!);
+    final input = await showTextInputDialog(
+      useRootNavigator: false,
       context: context,
       title: L10n.of(context).setStatus,
+      message: L10n.of(context).leaveEmptyToClearStatus,
+      okLabel: L10n.of(context).ok,
       cancelLabel: L10n.of(context).cancel,
-      actions: [
-        AdaptiveModalAction(
-          value: 'text',
-          label: L10n.of(context).setStatus,
-          icon: const Icon(Icons.text_fields_outlined),
-        ),
-        AdaptiveModalAction(
-          value: 'image',
-          label: L10n.of(context).setStatusImage,
-          icon: const Icon(Icons.image_outlined),
-        ),
-        AdaptiveModalAction(
-          value: 'remove_image',
-          label: L10n.of(context).removeStatusImage,
-          icon: const Icon(Icons.hide_image_outlined),
-          isDestructive: true,
-        ),
-      ],
+      hintText: L10n.of(context).statusExampleMessage,
+      maxLines: 6,
+      minLines: 1,
+      maxLength: 255,
+      initialText: currentPresence.statusMsg,
     );
-
-    if (action == null) return;
-
-    if (action == 'text') {
-      final currentPresence = await client.fetchCurrentPresence(client.userID!);
-      final input = await showTextInputDialog(
-        useRootNavigator: false,
-        context: context,
-        title: L10n.of(context).setStatus,
-        message: L10n.of(context).leaveEmptyToClearStatus,
-        okLabel: L10n.of(context).ok,
-        cancelLabel: L10n.of(context).cancel,
-        hintText: L10n.of(context).statusExampleMessage,
-        maxLines: 6,
-        minLines: 1,
-        maxLength: 255,
-        initialText: currentPresence.statusMsg,
-      );
-      if (input == null) return;
-      if (!mounted) return;
-      await showFutureLoadingDialog(
-        context: context,
-        future: () => client.setPresence(
-          client.userID!,
-          PresenceType.online,
-          statusMsg: input,
-        ),
-      );
-    } else if (action == 'image') {
-      final imageAction = await showModalActionPopup<AvatarAction>(
-        context: context,
-        title: L10n.of(context).setStatusImage,
-        cancelLabel: L10n.of(context).cancel,
-        actions: [
-          if (PlatformInfos.isMobile)
-            AdaptiveModalAction(
-              value: AvatarAction.camera,
-              label: L10n.of(context).openCamera,
-              icon: const Icon(Icons.camera_alt_outlined),
-            ),
-          AdaptiveModalAction(
-            value: AvatarAction.file,
-            label: L10n.of(context).openGallery,
-            icon: const Icon(Icons.photo_outlined),
-          ),
-        ],
-      );
-      if (imageAction == null) return;
-
-      MatrixFile file;
-      if (PlatformInfos.isMobile) {
-        final result = await ImagePicker().pickImage(
-          source: imageAction == AvatarAction.camera
-              ? ImageSource.camera
-              : ImageSource.gallery,
-          imageQuality: 50,
-        );
-        if (result == null) return;
-        file = MatrixFile(bytes: await result.readAsBytes(), name: result.path);
-      } else {
-        final result = await selectFiles(context, type: FileType.image);
-        final pickedFile = result.firstOrNull;
-        if (pickedFile == null) return;
-        file = MatrixFile(
-          bytes: await pickedFile.readAsBytes(),
-          name: pickedFile.name,
-        );
-      }
-
-      final uploadResult = await showFutureLoadingDialog(
-        context: context,
-        future: () => client.uploadContent(
-          file.bytes,
-          contentType: file.mimeType,
-          filename: file.name,
-        ),
-      );
-      final mxcUri = uploadResult.result;
-      if (mxcUri == null) return;
-
-      await showFutureLoadingDialog(
-        context: context,
-        future: () => client.request(
-          RequestType.PUT,
-          '/client/v3/profile/${client.userID}/im.fluffychat.status_image',
-          data: {'im.fluffychat.status_image': mxcUri.toString()},
-        ),
-      );
-    } else if (action == 'remove_image') {
-      await showFutureLoadingDialog(
-        context: context,
-        future: () => client.request(
-          RequestType.PUT,
-          '/client/v3/profile/${client.userID}/im.fluffychat.status_image',
-          data: {'im.fluffychat.status_image': null},
-        ),
-      );
-    }
+    if (input == null) return;
+    if (!mounted) return;
+    await showFutureLoadingDialog(
+      context: context,
+      future: () => client.setPresence(
+        client.userID!,
+        PresenceType.online,
+        statusMsg: input,
+      ),
+    );
   }
 
   bool waitForFirstSync = false;

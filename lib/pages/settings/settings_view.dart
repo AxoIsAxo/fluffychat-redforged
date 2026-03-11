@@ -14,10 +14,23 @@ import 'package:fluffychat/widgets/matrix.dart';
 import '../../widgets/mxc_image_viewer.dart';
 import 'settings.dart';
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends StatefulWidget {
   final SettingsController controller;
 
   const SettingsView(this.controller, {super.key});
+
+  @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  SettingsController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.loadBio();
+  }
 
   @override
   Widget build(BuildContext context) {
