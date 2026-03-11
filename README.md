@@ -1,23 +1,12 @@
-![Screenshot](https://github.com/krille-chan/fluffychat/blob/main/assets/banner_transparent.png?raw=true)
+# FluffyChat RedForged
 
-[FluffyChat](https://fluffy.chat) is an open source, nonprofit and cute [[matrix](https://matrix.org)] client written in [Flutter](https://flutter.dev). The goal of the app is to create an easy to use instant messenger which is open source and accessible for everyone.
+A customized fork of FluffyChat, the cute Matrix client, tailored for the RedForged community.
 
-### Links:
+## About
 
-- 🌐 [[Weblate] Translate FluffyChat into your language](https://hosted.weblate.org/projects/fluffychat/)
-- 🌍 [[m] Join the community](https://matrix.to/#/#fluffy-space:matrix.org)
-- 📰 [[Mastodon] Get updates on social media](https://troet.cafe/@krille)
-- 🖥️ [[Famedly] Server hosting and professional support](https://famedly.com/kontakt)
-- 💝 [[Liberapay] Support FluffyChat development](https://de.liberapay.com/KrilleChritzelius)
+FluffyChat RedForged is an open source Matrix client written in Flutter. This fork includes custom features and configurations specific to the RedForged ecosystem while maintaining the user-friendly and secure nature of the original FluffyChat.
 
-<a href='https://ko-fi.com/C1C86VN53' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-
-### Screenshots:
-
-<img src="https://github.com/krille-chan/fluffychat-website/blob/main/src/assets/screenshots/mobile.png?raw=true" height="300">
-<img src="https://github.com/krille-chan/fluffychat-website/blob/main/src/assets/screenshots/desktop.png?raw=true" height="300">
-
-# Features
+## Features
 
 - 📩 Send all kinds of messages, images and files
 - 🎙️ Voice messages
@@ -35,31 +24,33 @@
 - 🔄 Compatible with Element, Nheko, NeoChat and all other Matrix apps
 - 🔐 End to end encryption
 - 🔒 Encrypted chat backup
-- � Secure recovery key storage with auto-unlock
-- �😀 Emoji verification & cross signing
+- 🔑 Secure recovery key storage with auto-unlock
+- 😀 Emoji verification & cross signing
 
 ... and much more.
 
+## Installation
 
-# Installation
+This is a customized fork. For installation instructions and downloads, please visit:
 
-Please visit the website for installation instructions:
+- https://redforged.eu
 
-- https://fluffy.chat
+## How to Build
 
-# How to build
+1. To build FluffyChat RedForged you need [Flutter](https://flutter.dev) and [Rust](https://www.rust-lang.org/tools/install)
 
-1. To build FluffyChat you need [Flutter](https://flutter.dev) and [Rust](https://www.rust-lang.org/tools/install)
-
-2. Clone the repo:
+2. Clone this repository:
+```bash
+git clone https://github.com/AxoIsAxo/fluffychat-redforged.git
+cd fluffychat-redforged
 ```
-git clone https://github.com/krille-chan/fluffychat.git
-cd fluffychat
-```
+
 3. Choose your target platform below and enable support for it.
 3.1 If you want, enable Googles Firebase Cloud Messaging:
 
-`./scripts/add-firebase-messaging.sh`
+```bash
+./scripts/add-firebase-messaging.sh
+```
 
 4. Debug with: `flutter run`
 
@@ -107,17 +98,21 @@ flutter build windows --release
 flutter build macos --release
 ```
 
+## Fork Information
 
-# Special thanks
+This is a fork of the original FluffyChat project with customizations for the RedForged community. The original project can be found at: https://github.com/krille-chan/fluffychat
 
-* <a href="https://github.com/fabiyamada">Fabiyamada</a> is a graphics designer and has made the fluffychat logo and the banner. Big thanks for her great designs.
+### Changes in this Fork
 
-* <a href="https://github.com/advocatux">Advocatux</a> has made the Spanish translation with great love and care. He always stands by my side and supports my work with great commitment.
+- Custom branding and configuration for RedForged
+- Secure recovery key storage with auto-unlock functionality
+- Various bug fixes and improvements
+- Updated to version 0.1.0 for this fork
 
-* Thanks to MTRNord and Sorunome for developing.
+## License
 
-* Also thanks to all translators and testers! With your help, fluffychat is now available in more than 12 languages.
+This project maintains the same license as the original FluffyChat project. Please refer to the LICENSE file for details.
 
-* <a href="https://github.com/madsrh/WoodenBeaver">WoodenBeaver</a> sound theme for the notification sound.
+## Contributing
 
-* The Matrix Foundation for making and maintaining the [emoji translations](https://github.com/matrix-org/matrix-spec/blob/main/data-definitions/sas-emoji.json) used for emoji verification, licensed Apache 2.0
+Contributions to this fork are welcome. Please ensure any contributions align with the RedForged community goals and standards.
