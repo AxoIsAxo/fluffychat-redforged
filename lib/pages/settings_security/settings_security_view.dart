@@ -128,6 +128,62 @@ class SettingsSecurityView extends StatelessWidget {
                     ),
                   ),
                   Divider(color: theme.dividerColor),
+                  if (Matrix.of(context).client.encryption != null &&
+                      (PlatformInfos.isMobile || PlatformInfos.isDesktop)) ...[
+                    ListTile(
+                      title: Text(
+                        L10n.of(context).secureStorage,
+                        style: TextStyle(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        L10n.of(context).secureStorageDescription,
+                      ),
+                    ),
+                    SwitchListTile.adaptive(
+                      secondary: const Icon(Icons.lock_open_outlined),
+                      title: Text(L10n.of(context).autoUnlockEncryption),
+                      subtitle: Text(
+                        L10n.of(context).autoUnlockEncryptionDescription,
+                      ),
+                      value: controller.autoUnlockEnabled ?? false,
+                      onChanged: controller.toggleAutoUnlockSsss,
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        controller.hasStoredRecoveryKey == true
+                            ? Icons.check_circle_outlined
+                            : Icons.key_outlined,
+                        color: controller.hasStoredRecoveryKey == true
+                            ? Colors.green
+                            : null,
+                      ),
+                      title: Text(
+                        controller.hasStoredRecoveryKey == true
+                            ? L10n.of(context).recoveryKeyStored
+                            : L10n.of(context).recoveryKeyNotStored,
+                      ),
+                      subtitle: Text(
+                        L10n.of(context).storeRecoveryKeyDescription,
+                      ),
+                      trailing: controller.hasStoredRecoveryKey == true
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.delete_outlined,
+                                color: Colors.red,
+                              ),
+                              onPressed:
+                                  controller.deleteStoredRecoveryKeyAction,
+                            )
+                          : null,
+                      onTap: controller.hasStoredRecoveryKey != true
+                          ? controller.storeRecoveryKeyAction
+                          : null,
+                    ),
+                    Divider(color: theme.dividerColor),
+                  ],
                   ListTile(
                     title: Text(
                       L10n.of(context).account,

@@ -35,7 +35,8 @@
 - 🔄 Compatible with Element, Nheko, NeoChat and all other Matrix apps
 - 🔐 End to end encryption
 - 🔒 Encrypted chat backup
-- 😀 Emoji verification & cross signing
+- � Secure recovery key storage with auto-unlock
+- �😀 Emoji verification & cross signing
 
 ... and much more.
 

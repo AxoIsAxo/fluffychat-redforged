@@ -2807,5 +2807,19 @@
     "editBio": "Edit bio",
     "@editBio": {
         "description": "Title for editing bio"
-    }
+    },
+    "secureStorage": "Secure storage",
+    "secureStorageDescription": "Store your recovery key securely on this device for automatic encryption unlock.",
+    "storeRecoveryKey": "Store recovery key",
+    "storeRecoveryKeyDescription": "Save your recovery key in the device's secure storage. This allows automatic unlock of your encrypted messages.",
+    "recoveryKeyStored": "Recovery key is stored securely",
+    "recoveryKeyNotStored": "Recovery key is not stored",
+    "deleteStoredRecoveryKey": "Delete stored recovery key",
+    "deleteStoredRecoveryKeyDescription": "Remove the recovery key from this device's secure storage.",
+    "recoveryKeyDeleted": "Recovery key has been removed from secure storage",
+    "recoveryKeyStoredSuccess": "Recovery key stored securely",
+    "autoUnlockEncryption": "Auto-unlock encryption",
+    "autoUnlockEncryptionDescription": "Automatically unlock your encrypted messages on startup using the stored recovery key.",
+    "enterRecoveryKeyToStore": "Enter your recovery key to store it securely on this device.",
+    "invalidRecoveryKey": "Invalid recovery key. Please check and try again."
 }

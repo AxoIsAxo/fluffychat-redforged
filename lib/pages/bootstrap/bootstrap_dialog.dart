@@ -7,6 +7,7 @@ import 'package:matrix/matrix.dart';
 
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/services/secure_credential_store.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
@@ -122,9 +123,20 @@ class BootstrapDialogState extends State<BootstrapDialog> {
     titleText = null;
     _recoveryKeyStored = false;
     bootstrap = client.encryption!.bootstrap(onUpdate: (_) => setState(() {}));
-    final key = await const FlutterSecureStorage().read(key: _secureStorageKey);
+    // Try to load recovery key from both legacy and new secure storage
+    final legacyKey = await const FlutterSecureStorage().read(key: _secureStorageKey);
+    final userId = client.userID;
+    final storedKey = userId != null
+        ? await SecureCredentialStore.readRecoveryKey(userId)
+        : null;
+    final key = storedKey ?? legacyKey;
     if (key == null) return;
     _recoveryKeyTextEditingController.text = key;
+    // If the key came from legacy storage, migrate it to SecureCredentialStore
+    if (storedKey == null && legacyKey != null && userId != null) {
+      await SecureCredentialStore.storeRecoveryKey(userId, legacyKey);
+      await SecureCredentialStore.setAutoUnlockSsss(userId, true);
+    }
   }
 
   @override
@@ -244,12 +256,25 @@ class BootstrapDialogState extends State<BootstrapDialog> {
                   label: Text(L10n.of(context).next),
                   onPressed:
                       (_recoveryKeyCopied || _storeInSecureStorage == true)
-                      ? () {
+                      ? () async {
                           if (_storeInSecureStorage == true) {
+                            // Store in legacy location for compatibility
                             const FlutterSecureStorage().write(
                               key: _secureStorageKey,
                               value: key,
                             );
+                            // Also store via SecureCredentialStore with auto-unlock
+                            final userId = client.userID;
+                            if (userId != null && key != null) {
+                              await SecureCredentialStore.storeRecoveryKey(
+                                userId,
+                                key,
+                              );
+                              await SecureCredentialStore.setAutoUnlockSsss(
+                                userId,
+                                true,
+                              );
+                            }
                           }
                           setState(() => _recoveryKeyStored = true);
                         }

@@ -17,6 +17,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/services/secure_credential_store.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/init_with_restore.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
@@ -336,6 +337,33 @@ class MatrixState extends State<Matrix> with WidgetsBindingObserver {
     }
 
     createVoipPlugin();
+
+    // Try auto-unlock SSSS for all logged-in clients
+    _tryAutoUnlockSsss();
+  }
+
+  Future<void> _tryAutoUnlockSsss() async {
+    // Delay to let the UI fully initialize before attempting unlock
+    await Future.delayed(const Duration(seconds: 3));
+    for (final c in widget.clients) {
+      if (!mounted) return;
+      if (!c.isLogged()) continue;
+      if (!c.encryptionEnabled) continue;
+      try {
+        await c.roomsLoading;
+        await c.accountDataLoading;
+        if (!mounted) return;
+        if (c.prevBatch == null) {
+          await c.onSync.stream.first.timeout(
+            const Duration(seconds: 30),
+          );
+        }
+        if (!mounted) return;
+        await SecureCredentialStore.tryAutoUnlockSsss(c);
+      } catch (e, s) {
+        Logs().w('Auto-unlock SSSS failed for ${c.clientName}', e, s);
+      }
+    }
   }
 
   Future<void> createVoipPlugin() async {

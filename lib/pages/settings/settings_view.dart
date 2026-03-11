@@ -29,7 +29,9 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   void initState() {
     super.initState();
-    widget.controller.loadBio();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.controller.loadBio();
+    });
   }
 
   @override

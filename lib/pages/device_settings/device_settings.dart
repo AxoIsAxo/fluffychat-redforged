@@ -34,16 +34,22 @@ class DevicesSettingsController extends State<DevicesSettings> {
 
   @override
   void initState() {
-    _checkChatBackup();
     super.initState();
+    _checkChatBackup();
   }
 
   Future<void> _checkChatBackup() async {
-    final client = Matrix.of(context).client;
-    final state = await client.getCryptoIdentityState();
-    setState(() {
-      chatBackupEnabled = state.initialized && !state.connected;
-    });
+    try {
+      final client = Matrix.of(context).client;
+      final state = await client.getCryptoIdentityState();
+      if (mounted) {
+        setState(() {
+          chatBackupEnabled = state.initialized && !state.connected;
+        });
+      }
+    } catch (e) {
+      Logs().w('Failed to check chat backup state', e);
+    }
   }
 
   Future<void> removeDevicesAction(List<Device> devices) async {

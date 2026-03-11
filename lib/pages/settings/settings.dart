@@ -31,6 +31,7 @@ class SettingsController extends State<Settings> {
   bool profileUpdated = false;
   final bioController = TextEditingController();
   bool isBioLoading = false;
+  late MatrixState matrix;
 
   void updateProfile() => setState(() {
     profileUpdated = true;
@@ -46,10 +47,9 @@ class SettingsController extends State<Settings> {
       okLabel: L10n.of(context).ok,
       cancelLabel: L10n.of(context).cancel,
       initialText:
-          profile?.displayName ?? Matrix.of(context).client.userID!.localpart,
+          profile?.displayName ?? matrix.client.userID!.localpart,
     );
     if (input == null) return;
-    final matrix = Matrix.of(context);
     final success = await showFutureLoadingDialog(
       context: context,
       future: () => matrix.client.setProfileField(
@@ -76,7 +76,6 @@ class SettingsController extends State<Settings> {
         OkCancelResult.cancel) {
       return;
     }
-    final matrix = Matrix.of(context);
     await showFutureLoadingDialog(
       context: context,
       future: () => matrix.client.logout(),
@@ -116,7 +115,6 @@ class SettingsController extends State<Settings> {
             actions: actions,
           );
     if (action == null) return;
-    final matrix = Matrix.of(context);
     if (action == AvatarAction.remove) {
       final success = await showFutureLoadingDialog(
         context: context,
@@ -157,13 +155,20 @@ class SettingsController extends State<Settings> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkBootstrap());
-
     super.initState();
+    // Store matrix reference to avoid context access issues
+    matrix = Matrix.of(context);
+    // Delay checkBootstrap to avoid widget lifecycle issues
+    Future.microtask(() {
+      if (mounted) {
+        checkBootstrap();
+      }
+    });
   }
 
   Future<void> checkBootstrap() async {
-    final client = Matrix.of(context).client;
+    if (!mounted) return;
+    final client = matrix.client;
     if (!client.encryptionEnabled) return;
     await client.accountDataLoading;
     await client.userDeviceKeysLoading;
@@ -171,10 +176,13 @@ class SettingsController extends State<Settings> {
       await client.onSync.stream.first;
     }
 
+    if (!mounted) return;
     final state = await client.getCryptoIdentityState();
-    setState(() {
-      cryptoIdentityConnected = state.initialized && state.connected;
-    });
+    if (mounted) {
+      setState(() {
+        cryptoIdentityConnected = state.initialized && state.connected;
+      });
+    }
   }
 
   bool? cryptoIdentityConnected;
@@ -197,7 +205,6 @@ class SettingsController extends State<Settings> {
     if (isBioLoading) return;
     setState(() => isBioLoading = true);
     try {
-      final matrix = Matrix.of(context);
       final response = await matrix.client.request(
         RequestType.GET,
         '/client/v3/profile/${matrix.client.userID}/im.fluffychat.bio',
@@ -225,7 +232,6 @@ class SettingsController extends State<Settings> {
     );
     if (input == null) return;
     
-    final matrix = Matrix.of(context);
     final success = await showFutureLoadingDialog(
       context: context,
       future: () => matrix.client.request(
@@ -252,8 +258,7 @@ class SettingsController extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    final client = Matrix.of(context).client;
-    profileFuture ??= client.getProfileFromUserId(client.userID!);
+    profileFuture ??= matrix.client.getProfileFromUserId(matrix.client.userID!);
     return SettingsView(this);
   }
 }
