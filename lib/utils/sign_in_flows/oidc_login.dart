@@ -66,4 +66,15 @@ Future<void> oidcLoginFlow(
   }
 
   Logs().i('OIDC: Matrix client initialized successfully as ${client.userID}');
+  
+  // Store the user ID for future refresh operations
+  if (client.userID != null) {
+    await OidcService.storeTokens(
+      loginResult.accessToken,
+      loginResult.refreshToken,
+      loginResult.deviceId,
+      homeserver: homeserverUrl,
+      userId: client.userID,
+    );
+  }
 }

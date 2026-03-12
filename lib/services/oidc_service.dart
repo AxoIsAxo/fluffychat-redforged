@@ -272,7 +272,8 @@ class OidcService {
 
         if (accessToken != null) {
           Logs().i('OIDC: Token exchange successful!');
-          await storeTokens(accessToken, refreshToken, deviceId, homeserver: homeserver);
+          await storeTokens(accessToken, refreshToken, deviceId, 
+          homeserver: homeserver);
           return OidcLoginResult(
             accessToken: accessToken,
             refreshToken: refreshToken,
@@ -300,6 +301,7 @@ class OidcService {
     String? refreshToken,
     String deviceId, {
     String? homeserver,
+    String? userId,
   }) async {
     await _secureStorage.write(key: 'oidc_access_token', value: accessToken);
     if (refreshToken != null) {
@@ -312,6 +314,9 @@ class OidcService {
     if (homeserver != null) {
       await _secureStorage.write(key: 'oidc_homeserver', value: homeserver);
     }
+    if (userId != null) {
+      await _secureStorage.write(key: 'oidc_user_id', value: userId);
+    }
   }
 
   /// Load stored tokens.
@@ -320,6 +325,8 @@ class OidcService {
       'access_token': await _secureStorage.read(key: 'oidc_access_token'),
       'refresh_token': await _secureStorage.read(key: 'oidc_refresh_token'),
       'device_id': await _secureStorage.read(key: 'oidc_device_id'),
+      'homeserver': await _secureStorage.read(key: 'oidc_homeserver'),
+      'user_id': await _secureStorage.read(key: 'oidc_user_id'),
     };
   }
 

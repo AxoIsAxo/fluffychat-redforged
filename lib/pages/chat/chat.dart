@@ -515,7 +515,10 @@ class ChatController extends State<ChatPageWithRoom>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     if (!mounted) return;
-    setReadMarker();
+    // Only set read marker if client is still logged in and has valid access token
+    if (room.client.isLogged() && room.client.accessToken != null) {
+      setReadMarker();
+    }
   }
 
   Future<void>? _setReadMarkerFuture;
@@ -525,6 +528,11 @@ class ChatController extends State<ChatPageWithRoom>
     if (_setReadMarkerFuture != null) return;
     if (_scrolledUp) return;
     if (scrollUpBannerEventId != null) return;
+    // Additional check: ensure client is logged in AND has access token before proceeding
+    if (!room.client.isLogged() || room.client.accessToken == null) return;
+
+    final timeline = this.timeline;
+    if (timeline == null || timeline.events.isEmpty) return;
 
     if (eventId == null &&
         !room.hasNewMessages &&
@@ -537,10 +545,12 @@ class ChatController extends State<ChatPageWithRoom>
       return;
     }
 
-    final timeline = this.timeline;
-    if (timeline == null || timeline.events.isEmpty) return;
-
     Logs().d('Set read marker...', eventId);
+    // Final check to ensure access token is still valid before making API call
+    if (room.client.accessToken == null) {
+      Logs().w('Access token became null, skipping read marker');
+      return;
+    }
     // ignore: unawaited_futures
     _setReadMarkerFuture = timeline
         .setReadMarker(

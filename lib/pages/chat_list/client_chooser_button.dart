@@ -170,7 +170,9 @@ class ClientChooserButton extends StatelessWidget {
     var clientCount = 0;
     matrix.accountBundles.forEach((key, value) => clientCount += value.length);
     return FutureBuilder<Profile>(
-      future: matrix.client.isLogged() ? matrix.client.fetchOwnProfile() : null,
+      future: matrix.client.isLogged() && matrix.client.userID != null 
+          ? matrix.client.fetchOwnProfile() 
+          : null,
       builder: (context, snapshot) => Material(
         clipBehavior: Clip.hardEdge,
         borderRadius: BorderRadius.circular(99),
