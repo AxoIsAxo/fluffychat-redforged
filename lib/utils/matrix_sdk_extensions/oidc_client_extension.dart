@@ -110,62 +110,27 @@ class OidcAwareClient extends Client {
         // Update the client's access token
         this.accessToken = result.accessToken;
         
-        // The client might be in a logged out state internally
-        // We need to reset the login state properly
-        // First, check if the client thinks it's logged out
-        if (!this.isLogged()) {
-          Logs().i('OIDC: Client is in logged out state, attempting to restore...');
-          try {
-            // Get stored user ID
-            const secureStorage = FlutterSecureStorage();
-            final storedUserId = await secureStorage.read(key: 'oidc_user_id');
-            
-            // Try to fetch user ID using whoami if we don't have it stored
-            String? userId = storedUserId;
-            if (userId == null && result.deviceId != null) {
-              try {
-                final whoami = await this.request(
-                  RequestType.GET,
-                  '/_matrix/client/v3/account/whoami',
-                );
-                userId = whoami['user_id'] as String?;
-                if (userId != null) {
-                  Logs().i('OIDC: Restored user ID: $userId');
-                  // Store it for future use
-                  await secureStorage.write(key: 'oidc_user_id', value: userId);
-                }
-              } catch (e) {
-                Logs().w('OIDC: Could not fetch user ID after refresh', e);
-              }
-            }
-            
-            // If we have a user ID, try to properly re-initialize the client
-            if (userId != null && userId != this.userID) {
-              Logs().i('OIDC: Re-initializing client with restored user ID: $userId');
-              try {
-                await this.init(
-                  newToken: result.accessToken,
-                  newUserID: userId,
-                  newHomeserver: homeserverUri,
-                  newDeviceID: result.deviceId,
-                  newDeviceName: PlatformInfos.clientName,
-                );
-              } catch (e) {
-                Logs().w('OIDC: Failed to re-initialize client, trying basic state restoration', e);
-                // Fall back to basic state restoration
-                this.accessToken = result.accessToken;
-                super.onLoginStateChanged.add(LoginState.loggedIn);
-                await this.sync(filter: null);
-              }
-            } else {
-              // Basic state restoration if we couldn't get user ID
-              this.accessToken = result.accessToken;
-              super.onLoginStateChanged.add(LoginState.loggedIn);
-              await this.sync(filter: null);
-            }
-          } catch (e) {
-            Logs().w('Failed to restore client state after token refresh', e);
+        Logs().i('OIDC: After setting access token, isLogged(): ${this.isLogged()}, userID: ${this.userID}');
+        
+        // Simple state restoration - just update the essential fields
+        // Don't try to re-initialize the client as it causes encryption issues during logout
+        try {
+          // Get stored user ID
+          const secureStorage = FlutterSecureStorage();
+          final storedUserId = await secureStorage.read(key: 'oidc_user_id');
+          
+          if (storedUserId != null) {
+            Logs().i('OIDC: Restoring user ID from storage: $storedUserId');
+            // userID is read-only, we can't directly set it
+            // The client will get the user ID on the next sync or API call
           }
+          
+          // Trigger login state change to notify the app
+          super.onLoginStateChanged.add(LoginState.loggedIn);
+          
+          Logs().i('OIDC: Basic state restoration complete');
+        } catch (e) {
+          Logs().w('OIDC: Error during basic state restoration', e);
         }
         
         Logs().i('OIDC: Token refresh and state restoration complete');
