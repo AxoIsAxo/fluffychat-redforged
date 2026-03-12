@@ -299,7 +299,9 @@ extension on Client {
           <String>{},
           (previousValue, element) => previousValue..addAll(element ?? {}),
         );
-    allHeroes.add(userID!);
+    if (userID != null) {
+      allHeroes.add(userID!);
+    }
     return allHeroes;
   }
 }

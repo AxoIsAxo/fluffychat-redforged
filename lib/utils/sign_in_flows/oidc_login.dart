@@ -21,7 +21,7 @@ Future<void> oidcLoginFlow(
 
   Logs().i('OIDC: Client registered, starting login flow...');
 
-  final loginResult = await OidcService.login(metadata, clientId);
+  final loginResult = await OidcService.login(metadata, clientId, homeserver: homeserverUrl);
   if (loginResult == null) {
     throw Exception('OIDC Login failed or was cancelled');
   }

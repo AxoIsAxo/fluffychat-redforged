@@ -15,9 +15,9 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/custom_http_client.dart';
 import 'package:fluffychat/utils/custom_image_resizer.dart';
-import 'package:fluffychat/services/oidc_service.dart';
 import 'package:fluffychat/utils/init_with_restore.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/oidc_client_extension.dart' as client_ext;
 import 'matrix_sdk_extensions/flutter_matrix_dart_sdk_database/builder.dart';
 
 abstract class ClientManager {
@@ -111,8 +111,9 @@ abstract class ClientManager {
   ) async {
     final shareKeysWith = AppSettings.shareKeysWith.value;
     final enableSoftLogout = AppSettings.enableSoftLogout.value;
+    Logs().i('ClientManager: enableSoftLogout = $enableSoftLogout');
 
-    return Client(
+    return client_ext.OidcAwareClient(
       clientName,
       httpClient: CustomHttpClient.createHTTPClient(),
       verificationMethods: {
@@ -142,7 +143,10 @@ abstract class ClientManager {
           ) ??
           ShareKeysWith.all,
       onSoftLogout: enableSoftLogout
-          ? (client) => client.refreshAccessToken()
+          ? (client) {
+              Logs().i('ClientManager: Setting up soft logout callback');
+              return client.refreshAccessToken();
+            }
           : null,
       sendTimelineEventTimeout: Duration(
         seconds: AppSettings.sendTimelineEventTimeout.value,

@@ -142,8 +142,9 @@ class OidcService {
   /// Opens browser, starts local server, handles callback, exchanges code.
   static Future<OidcLoginResult?> login(
     Map<String, dynamic> metadata,
-    String clientId,
-  ) async {
+    String clientId, {
+    String? homeserver,
+  }) async {
     final deviceId = _generateDeviceId();
     final state = _generateRandomString(32);
     final codeVerifier = _generateRandomString(64);
@@ -271,7 +272,7 @@ class OidcService {
 
         if (accessToken != null) {
           Logs().i('OIDC: Token exchange successful!');
-          await storeTokens(accessToken, refreshToken, deviceId);
+          await storeTokens(accessToken, refreshToken, deviceId, homeserver: homeserver);
           return OidcLoginResult(
             accessToken: accessToken,
             refreshToken: refreshToken,
@@ -297,8 +298,9 @@ class OidcService {
   static Future<void> storeTokens(
     String accessToken,
     String? refreshToken,
-    String deviceId,
-  ) async {
+    String deviceId, {
+    String? homeserver,
+  }) async {
     await _secureStorage.write(key: 'oidc_access_token', value: accessToken);
     if (refreshToken != null) {
       await _secureStorage.write(
@@ -307,6 +309,9 @@ class OidcService {
       );
     }
     await _secureStorage.write(key: 'oidc_device_id', value: deviceId);
+    if (homeserver != null) {
+      await _secureStorage.write(key: 'oidc_homeserver', value: homeserver);
+    }
   }
 
   /// Load stored tokens.
